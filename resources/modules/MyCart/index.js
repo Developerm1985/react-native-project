@@ -1,18 +1,13 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { View, Text, Alert, StatusBar } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StatusBar } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { connect, useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import * as Layout from "@components/Layout";
 import { CheckoutSubmitButton } from "@components/common";
 import { MyCartHeader, MyCartItemGroup } from "./components";
-import { getCartApi, removeToCart, updateProfileAPI } from "../../http";
+import { getCartApi, removeToCart } from "../../http";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
-import {
-  finalPaymentPrice,
-  getCart,
-  removeCart,
-  selectedMerchantData,
-} from "../../slices/cartSlice";
+import { getCart, selectedMerchantData } from "../../slices/cartSlice";
 import { CheckoutBilling } from "../Checkout/components";
 import { validCoupon, setCouponData } from "../../slices/couponSlice";
 import { setCartTotal } from "../../slices/cartSlice";
@@ -23,62 +18,54 @@ import palette from "../../styles/palette.styles";
 const MyCart = ({ route }) => {
   const navigation = useNavigation();
   const [myCart, setMyCart] = useState([]);
-  const [selectedItems, setSelectedItems] = useState([]);
   const [selectedRadioButton, setSelectedRadioButton] = useState(undefined);
   const [selectedMerchant, setSelectedMerchant] = useState(undefined);
   const [orderTotalPrice, setOrderTotalPrice] = useState(0);
   const [totalPayment, setTotalPayment] = useState(orderTotalPrice);
   const [deliveryFee, setDeliveryFee] = useState(0);
   const dispatch = useDispatch();
-  const userAddress = useSelector((state) => state.user.userAddress);
   const { userdata } = useSelector((state) => state.user);
+
   useEffect(() => {
     clearCoupon();
-    dispatch(setCartTotal(orderTotalPrice));
     _getCart();
   }, []);
 
-  useEffect(() => {
-    const countTotalprice = () => {
-      const totalPrice = selectedMerchant?.product?.reduce(
-        (acc, item) =>
-          acc +
-          (item.food_price + item.variation_price + item.addOns_price) *
-            item.quantity,
-        0
-      );
-      setOrderTotalPrice(totalPrice);
-      return totalPrice ? totalPrice : 0;
-    };
-    countTotalprice();
-  }, [selectedMerchant]);
+  const totalPriceCounter = () => {
+    const totalPrice = selectedMerchant?.product?.reduce(
+      (acc, item) =>
+        acc +
+        (item.food_price + item.variation_price + item.addOns_price) *
+          item.quantity,
+      0
+    );
+    setOrderTotalPrice(totalPrice);
+    return totalPrice ? totalPrice : 0;
+  };
 
   const _getCart = async () => {
     LoadingOverlay.show("Loading...");
     try {
       const { data } = await getCartApi();
       setSelectedMerchant(undefined);
-      if (data?.success) {
-        setMyCart(data?.data);
-        dispatch(getCart(data?.data));
-        LoadingOverlay.hide();
-      } else {
-        LoadingOverlay.hide();
-        MessagePopup.show({
-          title: "Oops!",
-          message: data?.message,
-          actions: [
-            {
-              text: "Okay",
-              action: () => {
-                MessagePopup.hide();
-              },
-            },
-          ],
-        });
-      }
+      setOrderTotalPrice(0);
+      setMyCart(data?.data);
+      dispatch(getCart(data?.data));
+      LoadingOverlay.hide();
     } catch (err) {
       LoadingOverlay.hide();
+      MessagePopup.show({
+        title: "Error!",
+        message: err?.message,
+        actions: [
+          {
+            text: "Okay",
+            action: () => {
+              MessagePopup.hide();
+            },
+          },
+        ],
+      });
       throw err;
     }
   };
@@ -90,6 +77,7 @@ const MyCart = ({ route }) => {
 
   const reload = async () => {
     setSelectedMerchant(undefined);
+    setOrderTotalPrice(0);
     _getCart();
   };
 
@@ -105,6 +93,7 @@ const MyCart = ({ route }) => {
       const { data } = await removeToCart(params);
       if (data.success) {
         setSelectedMerchant(undefined);
+        setOrderTotalPrice(0);
         LoadingOverlay.hide();
         reload();
       }
@@ -145,12 +134,14 @@ const MyCart = ({ route }) => {
                 <View key={`${index}_ind`}>
                   <MyCartItemGroup
                     group={group}
-                    selectedItems={selectedItems}
+                    selectedItems={selectedRadioButton}
                     index={index}
                     handleSelectRadio={(value, restaurant) => {
                       setSelectedMerchant(restaurant);
+                      totalPriceCounter();
                       dispatch(selectedMerchantData(restaurant));
                       setSelectedRadioButton(value);
+                      dispatch(setCartTotal(orderTotalPrice));
                     }}
                     selectedRadioButton={selectedRadioButton}
                     removeItem={(item) => removeItem(item)}

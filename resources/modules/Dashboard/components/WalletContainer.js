@@ -70,7 +70,6 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 10,
-    // borderWidth: 1,
   },
   divider: {
     width: 1,

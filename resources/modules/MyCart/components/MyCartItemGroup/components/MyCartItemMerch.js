@@ -1,10 +1,6 @@
-import React, { useContext } from "react";
+import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome5";
-
-import { CheckBox } from "@components/form";
 import { flex, textStyles as text } from "@styles/";
-import CartContext from "../../../../../contexts/cart.context";
 import palette from "../../../../../styles/palette.styles";
 import { MessagePopup } from "../../../../../components/common";
 
@@ -46,27 +42,10 @@ const MyCartItemMerch = ({
         onPress={() =>
           isAvailable ? handleSelectRadio(index, restaurant) : setPopup()
         }
-        style={{
-          height: 20,
-          width: 20,
-          borderRadius: 10,
-          borderColor: "gray",
-          borderWidth: 2,
-          marginHorizontal: 20,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        style={styles.touchBox}
       >
         {selectedRadioButton == index ? (
-          <View
-            style={{
-              height: 12,
-              width: 12,
-              borderRadius: 6,
-              backgroundColor: palette.yellow,
-              margin: 10,
-            }}
-          ></View>
+          <View style={styles.container}></View>
         ) : (
           <></>
         )}
@@ -87,6 +66,23 @@ const styles = {
   wrapper: {
     backgroundColor: "#fff",
     marginBottom: 0,
+  },
+  touchBox: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    borderColor: "gray",
+    borderWidth: 2,
+    marginHorizontal: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  container: {
+    height: 12,
+    width: 12,
+    borderRadius: 6,
+    backgroundColor: palette.yellow,
+    margin: 10,
   },
 };
 export { MyCartItemMerch };

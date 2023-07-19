@@ -1,13 +1,7 @@
 import React from "react";
-import { Image, View, Text } from "react-native";
-
-import {
-  NavigationContainerRefContext,
-  useNavigation,
-} from "@react-navigation/native";
+import { Image, View } from "react-native";
 
 const LoadingImage = ({ flowName }) => {
-  const navigation = useNavigation();
   return (
     <View
       style={{

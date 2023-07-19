@@ -1,10 +1,7 @@
 import React, { useState } from "react";
-import { useNavigation } from "@react-navigation/native";
-import { View, Image, Text, TouchableOpacity, Alert } from "react-native";
-
+import { View, Image, Text, TouchableOpacity } from "react-native";
 import textStyles from "@styles/textStyles.styles";
 import { MessagePopup } from "@components/common/";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSelector } from "react-redux";
 
 const NameHeader = ({
@@ -14,7 +11,6 @@ const NameHeader = ({
   defaulData,
   deleteAccount,
 }) => {
-  const [profileImage, setProfileImage] = useState();
   const [isValid, setIsValid] = useState(true);
   const { userSocialName } = useSelector((state) => state.user);
 
@@ -22,9 +18,7 @@ const NameHeader = ({
     <View style={styles.nameHeader}>
       <Text style={[textStyles.weight.bold, textStyles.size.lg, { flex: 7 }]}>
         Hello{" "}
-        {user?.full_name != "" &&
-        user.full_name != undefined &&
-        user.full_name != null
+        {user?.full_name 
           ? user?.full_name
           : defaulData?.fname
           ? defaulData?.fname
@@ -109,7 +103,6 @@ const NameHeader = ({
                           text: "Cancel",
                           action: () => {
                             MessagePopup.hide();
-                            // handleLogout();
                           },
                         },
                       ],
@@ -136,9 +129,6 @@ const NameHeader = ({
               isValid
                 ? { uri: defaulData.image, cache: "force-cache" }
                 : require("../../../img/account.png")
-              // user?.image
-              //   ? { uri: user?.image ? user?.image : defaulData?.image }
-              //   : require("@img/account.png")
             }
             style={[
               styles.profileImage,

@@ -8,9 +8,7 @@ import {
   View,
 } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
-import palette from "../../../styles/palette.styles";
-import MapView, { Marker } from "react-native-maps";
-import { BackButton } from "../../../components/common";
+import MapView from "react-native-maps";
 import Header from "../../../components/common/Header";
 
 const AddressMap = (props) => {

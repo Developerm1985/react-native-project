@@ -171,13 +171,6 @@ const TrackParcel = ({ route }) => {
     routes: [{ name: "DashboardRoute" }],
   });
 
-  const goBackAction = CommonActions.goBack();
-
-  function handleBackButtonClick() {
-    navigation.dispatch(inActivity ? goBackAction : resetAction);
-    return true;
-  }
-
   useEffect(() => {
     BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
     return () => {
@@ -187,6 +180,21 @@ const TrackParcel = ({ route }) => {
       );
     };
   }, []);
+
+  useEffect(() => {
+    getLocation();
+  }, []);
+
+  useEffect(() => {
+    hasLocationPermission();
+  }, []);
+
+  const goBackAction = CommonActions.goBack();
+
+  function handleBackButtonClick() {
+    navigation.dispatch(inActivity ? goBackAction : resetAction);
+    return true;
+  }
 
   async function handleCancleOrder(isCancelable) {
     isCancelable && setIsModalVisible(true);
@@ -199,13 +207,13 @@ const TrackParcel = ({ route }) => {
         Alert.alert("Unable to open settings");
       });
     };
-    const status = await Geolocation.requestAuthorization("whenInUse");
 
-    if (status === "granted") {
+    const requestPermission = await Geolocation.requestAuthorization(
+      "whenInUse"
+    );
+    if (requestPermission === "granted") {
       return true;
-    }
-
-    if (status === "denied") {
+    } else if (requestPermission === "denied") {
       MessagePopup.show({
         title: "Location permission denied",
         // message: data.message,
@@ -218,9 +226,7 @@ const TrackParcel = ({ route }) => {
           },
         ],
       });
-    }
-
-    if (status === "disabled") {
+    } else if (requestPermission === "disabled") {
       Alert.alert(
         `Turn on Location Services to allow Cycle House to determine your location.`,
         "",
@@ -247,22 +253,21 @@ const TrackParcel = ({ route }) => {
     const hasPermission = await PermissionsAndroid.check(
       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
     );
-
     if (hasPermission) {
       return true;
     }
 
-    const status = await PermissionsAndroid.request(
+    const requestPermission = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
     );
 
-    if (status === PermissionsAndroid.RESULTS.GRANTED) {
+    if (requestPermission === PermissionsAndroid.RESULTS.GRANTED) {
       return true;
-    }
-
-    if (status === PermissionsAndroid.RESULTS.DENIED) {
+    } else if (requestPermission === PermissionsAndroid.RESULTS.DENIED) {
       ToastAndroid.show("Location permission denied", ToastAndroid.LONG);
-    } else if (status === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+    } else if (
+      requestPermission === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
+    ) {
       ToastAndroid.show("Location permission revoked", ToastAndroid.LONG);
     }
     return false;
@@ -314,14 +319,6 @@ const TrackParcel = ({ route }) => {
       }
     );
   };
-
-  useEffect(() => {
-    getLocation();
-  }, []);
-
-  useEffect(() => {
-    hasLocationPermission();
-  }, []);
 
   return (
     <>

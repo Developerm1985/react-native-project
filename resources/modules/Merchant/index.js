@@ -4,14 +4,12 @@ import {
   View,
   Text,
   ScrollView,
-  SafeAreaView,
   Dimensions,
   StyleSheet,
   Share,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/EvilIcons";
-import { Wrapper, Scroll } from "@components/Layout";
+import { Wrapper } from "@components/Layout";
 import {
   MerchHeader,
   MerchCoupons,
@@ -19,21 +17,18 @@ import {
   MerchProducts,
   MerchCartButton,
 } from "./components";
-
 import textStyles from "@styles/textStyles.styles";
 import merchantStyles from "@styles/merchant.styles";
 import { findMerchantDetails } from "../../http/index";
-
 import { LoadingOverlay, MessagePopup } from "../../components/common";
 import { BackButton } from "../../components/common";
 import { TouchableOpacity } from "react-native-gesture-handler";
 
 const Merchant = ({ route }) => {
-  const navigation = useNavigation();
   const [merchant, setMerchant] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [allCategories, setAllCategories] = useState([]);
-  const { height, width } = Dimensions.get("window");
+  const { width } = Dimensions.get("window");
 
   const shareMerchant = async () => {
     await Share.share({
@@ -44,54 +39,41 @@ const Merchant = ({ route }) => {
 
   useEffect(() => {
     LoadingOverlay.show("Loading...");
-    onLoad(route.params.id);
+    getMerchantDetail(route.params.id);
   }, []);
-  const onLoad = async (id) => {
+
+  const getMerchantDetail = async (id) => {
     try {
       const { data } = await findMerchantDetails({
         id: id,
       });
       LoadingOverlay.hide();
-      data.success
-        ? setMerchant(data?.data)
-        : MessagePopup.show({
-            title: "Warning!",
-            message: data.message,
-            actions: [
-              {
-                text: "Okay",
-                action: () => {
-                  MessagePopup.hide();
-                },
-              },
-            ],
-          });
+      setMerchant(data?.data);
     } catch (err) {
       LoadingOverlay.hide();
+      MessagePopup.show({
+        title: "Error!",
+        message: err?.message,
+        actions: [
+          {
+            text: "Okay",
+            action: () => {
+              MessagePopup.hide();
+            },
+          },
+        ],
+      });
     }
   };
 
   return merchant ? (
     <Wrapper style={{ backgroundColor: "#FFFFFF" }}>
       <StatusBar translucent backgroundColor="transparent" />
-      <BackButton
-        containerStyle={{
-          backgroundColor: "#ffffff",
-          zIndex: 999,
-          position: "absolute",
-          left: 20,
-          top: width / 10,
-        }}
-      />
+      <BackButton containerStyle={[styles.BackButton, { top: width / 10 }]} />
       <ScrollView showsVerticalScrollIndicator={false}>
         <MerchHeader merchant={merchant} merchantID={route?.params?.id} />
         <MerchCoupons couponData={merchant.merchant_default_voucher[0]} />
-        <View
-          style={[
-            merchantStyles.sectionWhite,
-            { flex: 1, flexDirection: "row", marginBottom: 0 },
-          ]}
-        >
+        <View style={[merchantStyles.sectionWhite, styles.optionContainer]}>
           <View style={{ flex: 0.8 }}>
             <Text
               style={[
@@ -126,7 +108,6 @@ const Merchant = ({ route }) => {
             </TouchableOpacity>
           </View>
         </View>
-        {/* {allCategories > 0 ? ( */}
         <>
           <MerchProductCategories
             merchantId={merchant.restaurant_id}
@@ -142,11 +123,6 @@ const Merchant = ({ route }) => {
             allCategories={allCategories}
           />
         </>
-        {/* ) : (
-          <View style={{ alignItems: "center" }}>
-            <Text style={{ color: "gray" }}>No Products found</Text>
-          </View>
-        )} */}
       </ScrollView>
       <MerchCartButton
         merchant={merchant}
@@ -163,6 +139,17 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     width: "60%",
     alignSelf: "center",
+  },
+  BackButton: {
+    backgroundColor: "#ffffff",
+    zIndex: 999,
+    position: "absolute",
+    left: 20,
+  },
+  optionContainer: {
+    flex: 1,
+    flexDirection: "row",
+    marginBottom: 0,
   },
 });
 

@@ -5,8 +5,6 @@ import {
   Image,
   Text,
   TouchableOpacity,
-  Alert,
-  ScrollView,
 } from "react-native";
 
 import textStyles from "@styles/textStyles.styles";

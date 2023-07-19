@@ -1,12 +1,5 @@
-import React, { useEffect, useState } from "react";
-import {
-  ScrollView,
-  View,
-  StatusBar,
-  Text,
-  TouchableOpacity,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import React, { useState } from "react";
+import { View, StatusBar, Text, TouchableOpacity } from "react-native";
 import palette from "../../styles/palette.styles";
 import { Announcements, Notification } from "./components/";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,12 +8,7 @@ const Messages = () => {
   const [activeTab, setactiveTab] = useState("announcements");
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: "#FFFFFF",
-      }}
-    >
+    <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor={palette.yellow} />
       <View style={styles.TopTabsWrapper}>
         <TouchableOpacity
@@ -31,12 +19,13 @@ const Messages = () => {
           }}
         >
           <Text
-            style={{
-              fontSize: 15,
-              color: activeTab == "announcements" ? palette.yellow : "#B8B8B8",
-              fontWeight: "500",
-              textAlign: "center",
-            }}
+            style={[
+              styles.textLabel,
+              {
+                color:
+                  activeTab == "announcements" ? palette.yellow : "#B8B8B8",
+              },
+            ]}
           >
             Announcements
           </Text>
@@ -49,12 +38,12 @@ const Messages = () => {
           }}
         >
           <Text
-            style={{
-              fontSize: 15,
-              color: activeTab == "messages" ? palette.yellow : "#B8B8B8",
-              fontWeight: "500",
-              textAlign: "center",
-            }}
+            style={[
+              styles.textLabel,
+              {
+                color: activeTab == "messages" ? palette.yellow : "#B8B8B8",
+              },
+            ]}
           >
             Messages
           </Text>
@@ -63,13 +52,7 @@ const Messages = () => {
       <View
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior="automatic"
-        style={{}}
       >
-        {/* <NameHeader
-          user={user}
-          handleLogout={() => this.handleLogout()}
-          navigation={navigation}
-        /> */}
         {activeTab == "announcements" ? <Announcements /> : <Notification />}
       </View>
     </SafeAreaView>
@@ -77,6 +60,10 @@ const Messages = () => {
 };
 
 const styles = {
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
   TopTabsWrapper: {
     flexDirection: "row",
     alignItems: "center",
@@ -88,6 +75,11 @@ const styles = {
     marginVertical: 15,
     backgroundColor: "#fff",
     width: "50%",
+  },
+  textLabel: {
+    fontSize: 15,
+    fontWeight: "500",
+    textAlign: "center",
   },
 };
 

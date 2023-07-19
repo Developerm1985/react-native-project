@@ -1,18 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, View, StatusBar, Text, BackHandler } from "react-native";
+import { View, StatusBar, BackHandler } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import palette from "../../styles/palette.styles";
-
 import { LoadingContent } from "./components/LoadingContent";
 import { LoadingImage } from "./components/LoadingImage";
-
 import { getParcelStatus } from "../../http";
-import { useSelector } from "react-redux";
-import { TouchableOpacity } from "react-native-gesture-handler";
 import { BackButton, MessagePopup } from "../../components/common";
 
 const LoadingCheckout = ({ route }) => {
-  const orderId = useSelector((state) => state.cart.orderId);
   const navigation = useNavigation();
   const [riderStatus, setRiderStatus] = useState(false);
   const [refreshIntervalId, setRefreshIntervalId] = useState(0);
@@ -59,7 +53,7 @@ const LoadingCheckout = ({ route }) => {
     try {
       const params = { order_id: route?.params?.orderId };
       const { data } = await getParcelStatus(params);
-      console.log("5 SEC API CALLING...", data);
+
       if (data?.success) {
         data?.data
           ? setRiderStatus(
@@ -69,7 +63,7 @@ const LoadingCheckout = ({ route }) => {
       } else {
         if (route?.params?.payment == "COD") {
           MessagePopup.show({
-            title: "Issue!",
+            title: "Error!",
             message: data?.message,
             actions: [
               {
@@ -83,7 +77,7 @@ const LoadingCheckout = ({ route }) => {
           });
         } else {
           MessagePopup.show({
-            title: "Issue!",
+            title: "Error!",
             message: data?.message + " & refund will be added to e-wallet",
             actions: [
               {
@@ -158,7 +152,6 @@ const LoadingCheckout = ({ route }) => {
           })
         }
       />
-      {console.log("route.params.path ----->", route)}
       <LoadingImage flowName={route?.params?.path} />
       <LoadingContent flowName={route?.params?.path} />
     </View>

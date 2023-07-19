@@ -5,17 +5,15 @@ import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   Dimensions,
   Image,
+  StyleSheet,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/FontAwesome5";
-
 import { SelectionSlider } from "./components";
 import Deals from "./components/Deals";
 import { BackButton, SearchInput } from "@components/common";
-
 import food from "../../styles/food.styles";
 import { flex, textStyles, palette } from "@styles";
 import { LoadingOverlay } from "@components/common/";
@@ -29,18 +27,17 @@ import { apiKey } from "../../config";
 import { setUserAddress } from "../../slices/authSlice";
 
 const Food = () => {
-  const navigator = useNavigation();
-  const [items, setItems] = useState({});
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const { userCurrentLocation } = useSelector((state) => state.user);
   const addressRedux = useSelector((state) => state.user.userAddress);
+  const [items, setItems] = useState({});
 
   useEffect(() => {
     let defalutAddress = null;
     const subscription = navigation.addListener("focus", () => {
       if (defalutAddress != addressRedux) {
-        onload();
+        getMerchantData();
         defalutAddress = addressRedux;
       }
     });
@@ -64,11 +61,10 @@ const Food = () => {
         console.log(e?.message);
       }
     }
-    onload();
     return () => subscription;
   }, [addressRedux]);
 
-  async function onload() {
+  async function getMerchantData() {
     LoadingOverlay.show("Loading...");
     try {
       const { data } = await getMerchantAPI();
@@ -92,13 +88,7 @@ const Food = () => {
             style={{ width: "80%" }}
             onPress={() => navigation.navigate("ManageAddress")}
           >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "flex-start",
-              }}
-            >
+            <View style={styles.addressContainer}>
               <Icon name="map-marker-alt" style={{ marginHorizontal: 10 }} />
               <Text
                 style={[
@@ -128,7 +118,7 @@ const Food = () => {
             </TouchableOpacity>
           </View>
         </View>
-        <SearchInput onFocus={() => navigator.navigate("Search")} />
+        <SearchInput onFocus={() => navigation.navigate("Search")} />
       </View>
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -139,20 +129,10 @@ const Food = () => {
         items?.for_tommorrow?.length == 0 &&
         items?.this_week?.length == 0 &&
         items?.today?.length == 0 ? (
-          <View
-            style={{
-              flex: 1,
-              justifyContent: "center",
-              alignItems: "center",
-              marginTop: Dimensions.get("window").width / 3,
-            }}
-          >
+          <View style={styles.unavailableContainer}>
             <Image
               resizeMode="contain"
-              style={{
-                width: 300,
-                height: 300,
-              }}
+              style={styles.imageContainer}
               source={require("../../img/unavailable-img.png")}
             />
           </View>
@@ -202,3 +182,21 @@ const Food = () => {
 };
 
 export default Food;
+
+const styles = StyleSheet.create({
+  addressContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+  unavailableContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: Dimensions.get("window").width / 3,
+  },
+  imageContainer: {
+    width: 300,
+    height: 300,
+  },
+});

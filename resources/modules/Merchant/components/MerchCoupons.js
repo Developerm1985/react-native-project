@@ -1,9 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
-
 import { Coupon } from "@components/common";
-
 import merchant from "@styles/merchant.styles";
 import palette from "@styles/palette.styles";
 import flex from "@styles/flex.styles";

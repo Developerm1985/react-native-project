@@ -1,9 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-
 import { Price } from "@components/common";
-
 import { textStyles as text, flex } from "@styles";
 
 const CartMerchant = ({ merchant, total, itemCount }) => {
@@ -35,11 +33,11 @@ const CartMerchant = ({ merchant, total, itemCount }) => {
   );
 };
 
-const styles = {
+const styles = StyleSheet.create({
   wrapper: {
     backgroundColor: "#fff",
     marginTop: 10,
     padding: 10,
   },
-};
+});
 export { CartMerchant };

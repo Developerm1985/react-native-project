@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  ScrollView,
-  View,
-  StatusBar,
-  SafeAreaView,
-} from "react-native";
+import { ScrollView, View, StatusBar, SafeAreaView } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import DashboardHeader from "@components/DashboardHeader";
 import {

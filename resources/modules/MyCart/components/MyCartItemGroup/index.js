@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { ImageBackground, View, Text } from "react-native";
-import { Image } from "react-native-elements";
-
+import React, { useState } from "react";
+import { ImageBackground, View, Text, StyleSheet } from "react-native";
 import { MyCartItemMerch, MyCartItem } from "./components";
 
 const MyCartItemGroup = ({
@@ -14,36 +12,19 @@ const MyCartItemGroup = ({
   const [checkResturent, setCheckResturent] = useState();
   return (
     <View
-      style={{
-        marginBottom: 10,
-        marginTop: 5,
-        opacity: group.isAvailable ? 1 : 0.7,
-      }}
+      style={[
+        styles.mainContainer,
+        {
+          opacity: group.isAvailable ? 1 : 0.7,
+        },
+      ]}
     >
-      <View
-        style={{
-          marginHorizontal: 20,
-          backgroundColor: "#fff",
-        }}
-      >
+      <View style={styles.imageContainer}>
         <ImageBackground
           source={require("@img/shape.png")}
-          style={{
-            height: 78,
-            alignItems: "flex-start",
-            justifyContent: "center",
-          }}
+          style={styles.imageBackground}
         >
-          <Text
-            style={{
-              fontSize: 16,
-              color: "#000",
-              marginBottom: -20,
-              paddingLeft: 15,
-            }}
-          >
-            {group.type}
-          </Text>
+          <Text style={styles.groupTypeText}>{group.type}</Text>
         </ImageBackground>
         <MyCartItemMerch
           isAvailable={group.isAvailable}
@@ -71,5 +52,27 @@ const MyCartItemGroup = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  mainContainer: {
+    marginBottom: 10,
+    marginTop: 5,
+  },
+  imageContainer: {
+    marginHorizontal: 20,
+    backgroundColor: "#fff",
+  },
+  imageBackground: {
+    height: 78,
+    alignItems: "flex-start",
+    justifyContent: "center",
+  },
+  groupTypeText: {
+    fontSize: 16,
+    color: "#000",
+    marginBottom: -20,
+    paddingLeft: 15,
+  },
+});
 
 export { MyCartItemGroup };

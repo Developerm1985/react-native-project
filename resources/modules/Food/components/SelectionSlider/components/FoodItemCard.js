@@ -2,7 +2,6 @@ import React from "react";
 import { useNavigation } from "@react-navigation/native";
 import { View, Text, TouchableOpacity, ImageBackground } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome5";
-
 import palette from "@styles/palette.styles";
 import flex from "@styles/flex.styles";
 import textStyles from "@styles/textStyles.styles";
@@ -10,18 +9,7 @@ import textStyles from "@styles/textStyles.styles";
 const FoodItemCard = ({ title, item, isFirst, isLast, fullWidth }) => {
   const navigation = useNavigation();
   return (
-    <View
-      style={{
-        shadowColor: "#000",
-        shadowOffset: {
-          width: 0,
-          height: 1.5,
-        },
-        shadowOpacity: 0.2,
-        shadowRadius: 3.84,
-        marginBottom: 10,
-      }}
-    >
+    <View style={styles.mainContainer}>
       <View
         style={[
           fullWidth
@@ -52,12 +40,7 @@ const FoodItemCard = ({ title, item, isFirst, isLast, fullWidth }) => {
           />
         </TouchableOpacity>
         <View style={styles.restaurantInfo}>
-          <View
-            style={{
-              flex: 1,
-              marginBottom: 3,
-            }}
-          >
+          <View style={styles.restaurantNameCard}>
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() =>
@@ -76,7 +59,6 @@ const FoodItemCard = ({ title, item, isFirst, isLast, fullWidth }) => {
               </Text>
             </TouchableOpacity>
           </View>
-
           {title == "Discover" ? (
             <></>
           ) : (
@@ -91,7 +73,7 @@ const FoodItemCard = ({ title, item, isFirst, isLast, fullWidth }) => {
                 style={[textStyles.smTextBold, { width: "90%" }]}
                 numberOfLines={1}
               >
-                {title == "Discover" ? item.restaurant_name : item?.name}
+                {item?.name}
               </Text>
               <View style={[flex.flexRow]}>
                 <Icon name="star" solid size={12} color={palette.yellow} />
@@ -154,6 +136,16 @@ const FoodItemCard = ({ title, item, isFirst, isLast, fullWidth }) => {
 };
 
 const styles = {
+  mainContainer: {
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1.5,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 3.84,
+    marginBottom: 10,
+  },
   restaurant: {
     borderRadius: 6,
     width: 200,
@@ -178,6 +170,10 @@ const styles = {
     paddingHorizontal: 12,
     paddingVertical: 12,
     backgroundColor: palette.white,
+  },
+  restaurantNameCard: {
+    flex: 1,
+    marginBottom: 3,
   },
   restaurantFullWidth: {
     flex: 1,

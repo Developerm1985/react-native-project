@@ -25,7 +25,6 @@ import EvilIcons from "react-native-vector-icons/EvilIcons";
 import Plus from "react-native-vector-icons/AntDesign";
 import { defaultAddressApi, getAddressListAPI } from "../../../http";
 import { setUserAddress } from "../../../slices/authSlice";
-import { FlatList } from "react-native-gesture-handler";
 
 const ManageAddress = (props) => {
   const navigation = useNavigation();
@@ -33,8 +32,8 @@ const ManageAddress = (props) => {
   const [selectedPlace, setSelectedPlace] = useState("All");
   const address = useSelector((state) => state.user.userAddress);
   const [defaultAddress, setDefaultAddress] = useState(address?.id);
-
   const dispatch = useDispatch();
+
   useEffect(() => {
     const subscribe = navigation.addListener("focus", () => {
       getAddresses();
@@ -78,16 +77,16 @@ const ManageAddress = (props) => {
     }
   };
 
-  const handlePlaceSelected = (value) => {
+  const savedPlaceData = () => {
     LoadingOverlay.show("Loading...");
     var newArray = addressData.filter(function (item) {
-      return item.address_type === value ? item : null;
+      return item.address_type === selectedPlace ? item : null;
     });
     LoadingOverlay.hide();
-    return selectedPlace === 'All' ? addressData : newArray;
+    return selectedPlace === "All" ? addressData : newArray;
   };
-  
-  const handleOnAddress = (addressItem) => {
+
+  const editAddressPress = (addressItem) => {
     navigation.navigate("EditAddress", {
       isEdit: true,
       addressItem,
@@ -101,7 +100,7 @@ const ManageAddress = (props) => {
     });
   };
 
-  const funcDefaultAddress = async (item) => {
+  const getDefaultAddress = async (item) => {
     try {
       const { data } = await defaultAddressApi({
         id: item?.id,
@@ -126,7 +125,7 @@ const ManageAddress = (props) => {
     }
   };
 
-  function handleBackButtonClick() {
+  function backHandler() {
     if (props?.route?.params?.from === "MyCart") {
       navigation.pop(2);
       return true;
@@ -134,16 +133,13 @@ const ManageAddress = (props) => {
   }
 
   useEffect(() => {
-    BackHandler.addEventListener("hardwareBackPress", handleBackButtonClick);
+    BackHandler.addEventListener("hardwareBackPress", backHandler);
     return () => {
-      BackHandler.removeEventListener(
-        "hardwareBackPress",
-        handleBackButtonClick
-      );
+      BackHandler.removeEventListener("hardwareBackPress", backHandler);
     };
   }, []);
 
-  const renderItem = ({ item, i }) => {
+  const renderItem = (item, i) => {
     return (
       <View
         key={i}
@@ -153,13 +149,14 @@ const ManageAddress = (props) => {
             flexDirection: "row",
             flex: 1,
             padding: 10,
+            marginVertical: 2,
           },
         ]}
       >
         <View style={{ flex: 1 }}>
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => handleOnAddress(item)}
+            onPress={() => editAddressPress(item)}
           >
             <View style={styles.IconTitle}>
               <EvilIcons
@@ -209,7 +206,7 @@ const ManageAddress = (props) => {
             onPress={async () => {
               setDefaultAddress(item?.id);
               dispatch(setUserAddress(item));
-              funcDefaultAddress(item);
+              getDefaultAddress(item);
             }}
           >
             {defaultAddress === item?.id && <View style={styles.selectedRb} />}
@@ -380,11 +377,10 @@ const ManageAddress = (props) => {
             flex: 1,
           }}
         >
-          <FlatList
-            style={{ marginTop: 20 }}
-            data={handlePlaceSelected(selectedPlace)}
-            renderItem={renderItem}
-            ListEmptyComponent={() => (
+          <View style={{ marginTop: 20 }}>
+            {savedPlaceData().length ? (
+              savedPlaceData().map((place, index) => renderItem(place, index))
+            ) : (
               <View
                 style={{
                   flexDirection: "row",
@@ -396,8 +392,7 @@ const ManageAddress = (props) => {
                 <Text>No Data Found</Text>
               </View>
             )}
-            ItemSeparatorComponent={() => <View style={{ height: 1 }} />}
-          />
+          </View>
         </View>
       </View>
     </ScrollView>
