@@ -3,14 +3,10 @@ import {
   View,
   StatusBar,
   Text,
-  TouchableOpacity,
   Image,
-  Platform,
   RefreshControl,
-  Dimensions,
   ActivityIndicator,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import palette from "../../../styles/palette.styles";
 import { getMessageList } from "../../../http";
 import { LoadingOverlay, MessagePopup } from "../../../components/common";
@@ -19,66 +15,50 @@ import { ScreenWidth } from "react-native-elements/dist/helpers";
 
 const Notification = () => {
   const [messages, setMessages] = useState([]);
-  const [isFetching, setIsFetching] = useState(false);
   const [valid, setValid] = useState(true);
   const [loading, setLoading] = useState(false);
   const [offset, setOffset] = useState(1);
   const [isAvailable, setIsAvailable] = useState(0);
 
   useEffect(() => {
-    LoadingOverlay.show("Loading...");
-    onload();
+    const unsubscribeTab = navigation.addListener("focus", (e) => {
+      LoadingOverlay.show("Loading...");
+      getMessageData();
+    });
+    return () => unsubscribeTab;
   }, []);
 
-  const onload = async () => {
+  const getMessageData = async () => {
+    setLoading(true);
     try {
       const { data } = await getMessageList({
         page: offset,
       });
-      if (data?.success) {
-        setMessages(messages.concat(data.data.message_list));
-        setIsAvailable(data.data.hasMore);
-        setOffset(offset + 1);
-        setIsFetching(false);
-        setLoading(false);
-        LoadingOverlay.hide();
-      } else {
-        LoadingOverlay.hide();
-        setIsFetching(false);
-        MessagePopup.show({
-          title: "Something wents to wrong!",
-          message: data.message,
-          actions: [
-            {
-              text: "Okay",
-              action: () => {
-                MessagePopup.hide();
-              },
-            },
-          ],
-        });
-      }
-    } catch (err) {
-      setIsFetching(false);
+      setMessages(messages.concat(data.data.message_list));
+      setIsAvailable(data.data.hasMore);
+      setOffset(offset + 1);
+      setLoading(false);
       LoadingOverlay.hide();
+    } catch (err) {
+      setLoading(false);
+      LoadingOverlay.hide();
+      MessagePopup.show({
+        title: "Something wents to wrong!",
+        message: data.message,
+        actions: [
+          {
+            text: "Okay",
+            action: () => {
+              MessagePopup.hide();
+            },
+          },
+        ],
+      });
     }
   };
 
   const ItemDivider = () => {
-    return (
-      <View
-        style={{
-          height: 2,
-          width: "100%",
-          backgroundColor: "#DBDBDB",
-        }}
-      />
-    );
-  };
-
-  const refreshPage = () => {
-    setIsFetching(true);
-    onload();
+    return <View style={styles.ItemDivider} />;
   };
 
   const renderFooter = () => {
@@ -109,19 +89,14 @@ const Notification = () => {
       showsVerticalScrollIndicator={false}
       ListFooterComponent={renderFooter}
       onEndReachedThreshold={0.7}
-      onEndReached={isAvailable && onload}
+      onEndReached={isAvailable && getMessageData()}
       enableEmptySections={true}
       ListEmptyComponent={() => (
         <View
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100%",
-            width: "100%",
-            zIndex: 1,
-            backgroundColor: "#fff",
-            top: ScreenWidth - (ScreenWidth * 15) / 100,
-          }}
+          style={[
+            styles.emptyComponent,
+            { top: ScreenWidth - (ScreenWidth * 15) / 100 },
+          ]}
         >
           <Text>There is no data to display</Text>
         </View>
@@ -130,8 +105,8 @@ const Notification = () => {
       extraData={messages}
       refreshControl={
         <RefreshControl
-          refreshing={isFetching}
-          onRefresh={() => refreshPage()}
+          refreshing={loading}
+          onRefresh={() => getMessageData()}
         />
       }
       renderItem={({ item }) => {
@@ -201,6 +176,19 @@ const styles = {
     height: 45,
     width: 45,
     borderRadius: 50,
+  },
+  ItemDivider: {
+    height: 2,
+    width: "100%",
+    backgroundColor: "#DBDBDB",
+  },
+  emptyComponent: {
+    alignItems: "center",
+    justifyContent: "center",
+    height: "100%",
+    width: "100%",
+    zIndex: 1,
+    backgroundColor: "#fff",
   },
 };
 

@@ -1,13 +1,11 @@
-import React from 'react';
-import {ScrollView, View} from 'react-native';
-
+import React from "react";
+import { ScrollView, View } from "react-native";
 // import {GooglePlacesAutocomplete} from 'react-native-google-places-autocomplete';
-
-import {apiKey} from '../../config/';
+import { apiKey } from "../../config/";
 
 const Location = () => {
   return (
-    <View style={{flex: 1}}>
+    <View style={{ flex: 1 }}>
       {/* <GooglePlacesAutocomplete
         placeholder="Search"
         onPress={(data, details = null) => {
@@ -27,7 +25,8 @@ const Location = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior="automatic"
-        style={{paddingHorizontal: 20}}></ScrollView>
+        style={{ paddingHorizontal: 20 }}
+      ></ScrollView>
     </View>
   );
 };

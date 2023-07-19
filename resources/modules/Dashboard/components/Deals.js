@@ -1,10 +1,9 @@
 import React from "react";
-import { View, Text, useWindowDimensions } from "react-native";
+import { View, Text, useWindowDimensions, TouchableOpacity } from "react-native";
 import Carousel from "react-native-snap-carousel";
 import { DealCard } from "@components/common";
 import textStyles from "@styles/textStyles.styles";
 import flex from "@styles/flex.styles";
-import { TouchableOpacity } from "react-native-gesture-handler";
 import { useNavigation } from "@react-navigation/native";
 
 const Deals = ({ banners }) => {

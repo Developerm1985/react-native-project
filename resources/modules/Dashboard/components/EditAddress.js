@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ScrollView,
   View,
@@ -23,7 +23,6 @@ import palette from "@styles/palette.styles";
 import textStyles from "@styles/textStyles.styles";
 import formInputs from "@styles/formInputs.styles";
 import { LoadingOverlay } from "@components/common/";
-import FontAwesome from "react-native-vector-icons/FontAwesome";
 import Geolocation from "react-native-geolocation-service";
 import {
   addAddressAPI,
@@ -38,26 +37,16 @@ import MapView, { Marker } from "react-native-maps";
 import { Dropdown } from "react-native-element-dropdown";
 import { apiKey } from "../../../config";
 import axios from "axios";
-import { BackButton } from "../../../components/common";
 import Header from "../../../components/common/Header";
 
 const EditAddress = ({ route }) => {
-  var singleAddressData;
-  var selectedPlaceValue;
-  var isEdits = false;
+
   const { userdata } = useSelector((state) => state.user);
+  const {singleAddressData, isEdit } = route?.params;
   const map = useRef();
-
-  if (route.params != undefined) {
-    singleAddressData = route.params?.addressItem;
-    isEdits = route?.params?.isEdit;
-    selectedPlaceValue =
-      route.params?.selected_place == "All"
-        ? "Home"
-        : route.params?.selected_place;
-  }
-
   const navigation = useNavigation();
+  const API_KEY = apiKey?.google;
+
   const [regionData, setRegiondata] = useState();
   const [regionItem, setregionItem] = useState();
   const [provinceData, setProvincedata] = useState();
@@ -85,8 +74,6 @@ const EditAddress = ({ route }) => {
       ? route?.params?.addressItem?.address_type
       : "Home"
   );
-  const [addressID, setAddressID] = useState(route.params?.addressItem?.id);
-  const API_KEY = apiKey?.google;
   const [showingResult, setshowingResult] = useState(false);
   const [searchData, setSearchData] = useState("");
   const [keyboardLayout, setKeyboardLayout] = useState(null);
@@ -115,9 +102,21 @@ const EditAddress = ({ route }) => {
   ];
 
   useEffect(() => {
-    fetchRegions();
+    LoadingOverlay.show('Loading...')
+
     const subscribe = navigation.addListener("focus", () => {
-      getLocation();
+      getLocation().then(()=>{
+        fetchRegions()
+        }).then(()=>{
+          getAllAddressProvince();
+        }).then(()=> {
+          getAllAddressCity();
+        }).then(()=>{
+          getAllBarangay();
+        }).catch((error)=>{
+          throw error
+        })
+      LoadingOverlay.hide();
     });
 
     return subscribe;
@@ -156,18 +155,16 @@ const EditAddress = ({ route }) => {
 
   const getLocation = async () => {
     const hasPermission = await hasLocationPermission();
-
     if (!hasPermission) {
       return;
     }
-
     Geolocation.getCurrentPosition(
       (position) => {
-        console.log(
-          "POSITION ---->",
-          position.coords.latitude,
-          position.coords.longitude
-        );
+        setLocation({
+          ...location, 
+          latitude: position.coords.latitude, 
+          longitude: position.coords.longitude
+        })
       },
       (error) => {
         MessagePopup.show({
@@ -175,15 +172,13 @@ const EditAddress = ({ route }) => {
           message: error.message,
           actions: [
             {
-              text: "OKAY",
+              text: "Okay",
               action: () => {
                 MessagePopup.hide();
               },
             },
           ],
         });
-        // setLocation(null);
-        console.log(error);
       },
       {
         accuracy: {
@@ -208,13 +203,11 @@ const EditAddress = ({ route }) => {
         Alert.alert("Unable to open settings");
       });
     };
-    const status = await Geolocation.requestAuthorization("whenInUse");
 
-    if (status === "granted") {
+    const requestPermission = await Geolocation.requestAuthorization("whenInUse");
+    if (requestPermission === "granted") {
       return true;
-    }
-
-    if (status === "denied") {
+    } else if (requestPermission === "denied") {
       MessagePopup.show({
         title: "Location permission denied",
         // message: data.message,
@@ -227,9 +220,7 @@ const EditAddress = ({ route }) => {
           },
         ],
       });
-    }
-
-    if (status === "disabled") {
+    } else if (requestPermission === "disabled") {
       Alert.alert(
         `Turn on Location Services to allow Cycle House to determine your location.`,
         "",
@@ -244,151 +235,130 @@ const EditAddress = ({ route }) => {
   };
 
   const hasLocationPermission = async () => {
+
     if (Platform.OS === "ios") {
       const hasPermission = await hasPermissionIOS();
       return hasPermission;
-    }
-
-    if (Platform.OS === "android" && Platform.Version < 23) {
+    } else if (Platform.OS === "android" && Platform.Version < 23) {
       return true;
     }
 
     const hasPermission = await PermissionsAndroid.check(
       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
     );
-
     if (hasPermission) {
       return true;
     }
 
-    const status = await PermissionsAndroid.request(
+    const requestPermission = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
     );
 
-    if (status === PermissionsAndroid.RESULTS.GRANTED) {
-      fetchRegions();
+    if (requestPermission === PermissionsAndroid.RESULTS.GRANTED) {
       return true;
-    }
-
-    if (status === PermissionsAndroid.RESULTS.DENIED) {
+    } else if (requestPermission === PermissionsAndroid.RESULTS.DENIED) {
       ToastAndroid.show("Location permission denied", ToastAndroid.LONG);
-    } else if (status === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+    } else if (requestPermission === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
       ToastAndroid.show("Location permission revoked", ToastAndroid.LONG);
     }
+
     return false;
   };
 
   const fetchRegions = async () => {
-    try {
-      const { data } = await getRegionsAPI();
-      if (data.success) {
-        let updatedData = data?.data?.map((item) => ({
-          label: item?.name,
-          value: item,
-        }));
-        let updatedValue = data?.data?.find(
-          (item) =>
-            item?.id == singleAddressData?.region_id && {
-              label: item?.name,
-              value: item,
-            }
-        );
-        setregionItem(updatedValue);
-        setRegiondata(updatedData);
-        getAllAddressProvince();
+      try {
+        const { data } = await getRegionsAPI();
+        if (data.success) {
+          let updatedData = data?.data?.map((item) => ({
+            ...item, 
+            label: item?.name,
+          }));
+          let updatedValue = data?.data?.find((item) =>
+              item?.id == singleAddressData?.region_id && {
+                ...item, 
+                label: item?.name,
+              });
+          setregionItem(updatedValue);
+          setRegiondata(updatedData);
+        }
+      } catch (error) {
+        throw error;
       }
-    } catch (error) {
-      throw error;
-    }
   };
 
   const getAllAddressProvince = async () => {
-    if (singleAddressData) {
       try {
         const { data } = await getprovinceAPI({
           region_id: singleAddressData?.region_id,
         });
         if (data.success) {
           let updatedData = data?.data?.map((item) => ({
+            ...item,
             label: item?.name,
-            value: item,
           }));
           let updatedValue = data?.data?.find(
             (item) =>
               item?.id == singleAddressData?.province_id && {
+                ...item,
                 label: item?.name,
-                value: item,
               }
           );
           setprovinceItem(updatedValue);
           setProvincedata(updatedData);
-          getAllAddressCity();
         }
-      } catch (error) {}
-    }
+      } catch (error) {
+        throw error;
+      }
   };
 
   const getAllAddressCity = async () => {
-    if (singleAddressData) {
       try {
         const { data } = await getcityAPI({
           province_id: singleAddressData?.province_id,
         });
         if (data.success) {
           let updatedData = data?.data?.map((item) => ({
+            ...item,
             label: item?.name,
-            value: item,
           }));
-          let updatedValue = data?.data?.find(
-            (item) =>
+          let updatedValue = data?.data?.find((item) => 
               item?.id == singleAddressData?.city_id && {
+                ...item,
                 label: item?.name,
-                value: item,
-              }
-          );
+              });
           setCityItem(updatedValue);
           setCitydata(updatedData);
-          getAllBarangay();
         }
       } catch (error) {
         throw error;
       }
-    }
   };
 
   const getAllBarangay = async () => {
-    if (singleAddressData) {
       try {
         const { data } = await getbarangayAPI({
           city_id: singleAddressData?.city_id,
         });
         if (data.data) {
           let updatedData = data?.data?.map((item) => ({
+            ...item,
             label: item?.name,
-            value: item,
           }));
-          let updatedValue = data?.data?.find(
-            (item) =>
+          let updatedValue = data?.data?.find((item) =>
               item?.id == singleAddressData?.barangay_id && {
+                ...item,
                 label: item?.name,
-                value: item,
-              }
-          );
+              });
           setbarangayItem(updatedValue);
           setBarangaydata(updatedData);
         }
       } catch (error) {
         throw error;
       }
-    }
-  };
-
-  const handlePlaceSelected = (value) => {
-    setSelectedPlace(value);
   };
 
   const submitForm = async () => {
-    if (regionItem == null || regionItem == "" || regionItem == undefined) {
+    if (!regionItem) {
       MessagePopup.show({
         title: "Required!",
         message: `Please select region`,
@@ -401,11 +371,7 @@ const EditAddress = ({ route }) => {
           },
         ],
       });
-    } else if (
-      provinceItem == null ||
-      provinceItem == "" ||
-      provinceItem == undefined
-    ) {
+    } else if (!provinceItem) {
       MessagePopup.show({
         title: "Required!",
         message: `Please select province`,
@@ -418,7 +384,7 @@ const EditAddress = ({ route }) => {
           },
         ],
       });
-    } else if (cityItem == null || cityItem == "" || cityItem == undefined) {
+    } else if (!cityItem) {
       MessagePopup.show({
         title: "Required!",
         message: `Please select city`,
@@ -431,11 +397,7 @@ const EditAddress = ({ route }) => {
           },
         ],
       });
-    } else if (
-      barangayItem == null ||
-      barangayItem == "" ||
-      barangayItem == undefined
-    ) {
+    } else if (!barangayItem) {
       MessagePopup.show({
         title: "Required!",
         message: `Please select barangay`,
@@ -448,7 +410,7 @@ const EditAddress = ({ route }) => {
           },
         ],
       });
-    } else if (postCode == null || postCode == "" || postCode == undefined) {
+    } else if (!postCode) {
       MessagePopup.show({
         title: "Required!",
         message: `Please select postal code`,
@@ -462,11 +424,9 @@ const EditAddress = ({ route }) => {
         ],
       });
     } else if (
-      searchKeyword == undefined ||
-      searchKeyword == null ||
-      (searchKeyword == "" &&
-        route?.params?.markData?.markerData?.latitude == undefined) ||
-      route?.params?.markData?.markerData?.longitude == undefined
+      !searchKeyword ||
+      route?.params?.markData?.markerData?.longitude == undefined || 
+      route?.params?.markData?.markerData?.latitude == undefined
     ) {
       MessagePopup.show({
         title: "Required!",
@@ -546,8 +506,7 @@ const EditAddress = ({ route }) => {
   };
 
   const updateAddressFrom = async () => {
-    // Validation here...
-    if (regionItem == null || regionItem == "" || regionItem == undefined) {
+    if (!regionItem) {
       MessagePopup.show({
         title: "Required!",
         message: `Please select region`,
@@ -560,11 +519,7 @@ const EditAddress = ({ route }) => {
           },
         ],
       });
-    } else if (
-      provinceItem == null ||
-      provinceItem == "" ||
-      provinceItem == undefined
-    ) {
+    } else if (!provinceItem) {
       MessagePopup.show({
         title: "Required!",
         message: `Please select province`,
@@ -577,7 +532,7 @@ const EditAddress = ({ route }) => {
           },
         ],
       });
-    } else if (cityItem == null || cityItem == "" || cityItem == undefined) {
+    } else if (!cityItem) {
       MessagePopup.show({
         title: "Required!",
         message: `Please select city`,
@@ -590,11 +545,7 @@ const EditAddress = ({ route }) => {
           },
         ],
       });
-    } else if (
-      barangayItem == null ||
-      barangayItem == "" ||
-      barangayItem == undefined
-    ) {
+    } else if (!barangayItem) {
       MessagePopup.show({
         title: "Required!",
         message: `Please select barangay`,
@@ -607,7 +558,7 @@ const EditAddress = ({ route }) => {
           },
         ],
       });
-    } else if (postCode == null || postCode == "" || postCode == undefined) {
+    } else if (!postCode) {
       MessagePopup.show({
         title: "Required!",
         message: `Please select postal code`,
@@ -621,10 +572,8 @@ const EditAddress = ({ route }) => {
         ],
       });
     } else if (
-      searchKeyword == undefined ||
-      searchKeyword == null ||
-      (searchKeyword == "" &&
-        route?.params?.markData?.markerData?.latitude == undefined) ||
+      !searchKeyword ||
+      route?.params?.markData?.markerData?.latitude == undefined ||
       route?.params?.markData?.markerData?.longitude == undefined
     ) {
       MessagePopup.show({
@@ -654,7 +603,7 @@ const EditAddress = ({ route }) => {
         postal_code: postCode,
       };
       try {
-        const { data } = await updateSingleAddressAPI(addressID, params);
+        const { data } = await updateSingleAddressAPI(singleAddressData?.id, params);
         if (data?.success) {
           LoadingOverlay.hide();
           MessagePopup.show({
@@ -704,27 +653,26 @@ const EditAddress = ({ route }) => {
   };
 
   const handleChangeRegion = async (item) => {
-    if (item !== "none") {
+      LoadingOverlay.show("Loading...");
       setregionItem(item);
       let params = {
         region_id: item?.id,
       };
-
       try {
         const { data } = await getprovinceAPI(params);
         let updatedData = data?.data?.map((item) => ({
+          ...item,
           label: item?.name,
-          value: item,
         }));
         setProvincedata(updatedData);
       } catch (error) {
         console.log("Error");
       }
-    }
+      LoadingOverlay.hide();
   };
 
   const handleChangeProvince = async (item) => {
-    if (item !== "none") {
+      LoadingOverlay.show("Loading...");
       setprovinceItem(item);
       let params = {
         province_id: item?.id,
@@ -732,19 +680,19 @@ const EditAddress = ({ route }) => {
       try {
         const { data } = await getcityAPI(params);
         let updatedData = data?.data?.map((item) => ({
+          ...item,
           label: item?.name,
-          value: item,
         }));
-
         setCitydata(updatedData);
       } catch (error) {
         console.log("Error");
       }
-    }
+      LoadingOverlay.hide();
   };
 
   const handleChangeCity = async (item) => {
-    if (item !== "none") {
+    if (item) {
+      LoadingOverlay.show("Loading...");
       setCityItem(item);
       let params = {
         city_id: item?.id,
@@ -753,25 +701,20 @@ const EditAddress = ({ route }) => {
       try {
         const { data } = await getbarangayAPI(params);
         let updatedData = data?.data?.map((item) => ({
+          ...item,
           label: item?.name,
-          value: item,
         }));
         setBarangaydata(updatedData);
       } catch (error) {
         console.log("Error");
       }
-    }
-  };
-
-  const handleChangeBarangay = (itemvalue) => {
-    if (itemvalue !== "none") {
-      setbarangayItem(itemvalue);
+      LoadingOverlay.hide();
     }
   };
 
   const searchLocation = async (addinputval) => {
     setsearchKeyword(addinputval);
-    if (addinputval === "") {
+    if (!addinputval) {
       setshowingResult(false);
     } else {
       await axios
@@ -790,15 +733,14 @@ const EditAddress = ({ route }) => {
   };
 
   const handleOnAddress = async (addressItem, _placeId) => {
-    if (_placeId != null) {
       await axios
         .get(
           `https://maps.googleapis.com/maps/api/place/details/json?place_id=${_placeId}&key=${API_KEY}`
         )
         .then(async (data) => {
           navigation.navigate("AddressMap", {
-            addressItem: addressItem,
-            isEdit: route.params?.isEdit,
+            addressItem,
+            isEdit,
             fromParcel: route?.params?.fromParcel,
             latlong: {
               latitude: data?.data?.result?.geometry?.location.lat,
@@ -811,7 +753,6 @@ const EditAddress = ({ route }) => {
         .catch((err) => {
           throw err;
         });
-    }
   };
 
   return (
@@ -848,7 +789,7 @@ const EditAddress = ({ route }) => {
                       <TouchableOpacity
                         activeOpacity={0.8}
                         key={`place${index}`}
-                        onPress={() => handlePlaceSelected(item.title)}
+                        onPress={() => setSelectedPlace(item.title)}
                         style={
                           (styles.addressType,
                           {
@@ -889,9 +830,9 @@ const EditAddress = ({ route }) => {
               labelField="label"
               valueField="value"
               placeholder="Select Region"
-              value={regionItem}
+              value={regionItem?.value}
               onChange={(item) => {
-                handleChangeRegion(item.value);
+                handleChangeRegion(item);
               }}
             />
             <Text style={{ marginTop: 20 }}>Province</Text>
@@ -904,9 +845,9 @@ const EditAddress = ({ route }) => {
               labelField="label"
               valueField="value"
               placeholder="Select Province"
-              value={provinceItem}
+              value={provinceItem?.value}
               onChange={(item) => {
-                handleChangeProvince(item.value);
+                handleChangeProvince(item);
               }}
             />
             <Text style={{ marginTop: 20 }}>City</Text>
@@ -919,9 +860,9 @@ const EditAddress = ({ route }) => {
               labelField="label"
               valueField="value"
               placeholder="Select City"
-              value={cityItem}
+              value={cityItem?.value}
               onChange={(item) => {
-                handleChangeCity(item.value);
+                handleChangeCity(item);
               }}
             />
             <Text style={{ marginTop: 20 }}>Barangay</Text>
@@ -934,12 +875,11 @@ const EditAddress = ({ route }) => {
               labelField="label"
               valueField="value"
               placeholder="Select Barangay"
-              value={barangayItem}
+              value={barangayItem?.value}
               onChange={(item) => {
-                handleChangeBarangay(item.value);
+                setbarangayItem(item);
               }}
             />
-
             <Text style={{ marginTop: 20, marginBottom: 10 }}>Postal Code</Text>
             <View>
               <Input
@@ -1124,10 +1064,10 @@ const EditAddress = ({ route }) => {
                         : palette.yellow,
                   },
                 ]}
-                onPress={isEdits ? updateAddressFrom : submitForm}
+                onPress={isEdit ? updateAddressFrom : submitForm}
               >
                 <Text style={[textStyles.mdTextBold, { color: palette.white }]}>
-                  {isEdits ? "Update Address" : "Save "}
+                  {isEdit ? "Update Address" : "Save "}
                 </Text>
               </TouchableOpacity>
             </View>

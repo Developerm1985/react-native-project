@@ -1,22 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Image, Text, TouchableOpacity } from "react-native";
-import HTML from "react-native-render-html";
 import { useNavigation } from "@react-navigation/native";
-import { useSelector } from "react-redux";
-
 import { ProductQuantityControl, Price } from "@components/common";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-
 import merchantStyles from "@styles/merchant.styles";
 import flex from "@styles/flex.styles";
 import textStyles from "@styles/textStyles.styles";
-import { URL } from "../../../../../config";
-
-import Cart from "../../../../../factories/cart.factory";
 
 const MerchProductCard = ({ product }) => {
   const [quantity, setQuantity] = useState(0);
-  const [mounted, setMounted] = useState(false);
   const navigation = useNavigation();
 
   return (
@@ -34,7 +25,6 @@ const MerchProductCard = ({ product }) => {
       />
       <View style={[merchantStyles.productInfo]}>
         <Text style={textStyles.normalTextMedium}>{product.name}</Text>
-
         <View style={[flex.flexRow, flex.contentBetween]}>
           <Price
             style={[textStyles.normalTextMedium, { flex: 1 }]}

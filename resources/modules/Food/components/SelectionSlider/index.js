@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigation } from "@react-navigation/native";
 import { ScrollView, View, Text, TouchableOpacity } from "react-native";
-
 import { FoodItemCard } from "./components";
-
 import flex from "@styles/flex.styles";
 import textStyles from "@styles/textStyles.styles";
 import food from "@styles/food.styles";
@@ -39,7 +37,7 @@ const SelectionSlider = ({
         )}
       </View>
       {vertical ? (
-        <View>
+        <ScrollView>
           {stores.map((item, index) => (
             <FoodItemCard
               key={`fooditem${title.toLowerCase().replace(/ /g, "")}${index}`}
@@ -50,10 +48,10 @@ const SelectionSlider = ({
               fullWidth
             />
           ))}
-        </View>
+        </ScrollView>
       ) : (
         <ScrollView
-          horizontal={true}
+          horizontal
           showsHorizontalScrollIndicator={false}
           contentInsetAdjustmentBehavior="automatic"
           style={{ marginBottom: 20 }}

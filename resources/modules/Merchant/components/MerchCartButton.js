@@ -2,29 +2,12 @@ import React, { useEffect, useState, useRef } from "react";
 import { TouchableOpacity, View, Text, Animated } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
-
 import { CartIcon, Price } from "@components/common";
 import { flex, textStyles, palette } from "@styles/";
-
-import Cart from "../../../factories/cart.factory";
 
 const MerchCartButton = ({ merchant, totalPrice }) => {
   const navigation = useNavigation();
   const { cartData } = useSelector((state) => state.cart);
-  // const cart = useSelector((state) => new Cart(state.cart));
-  // const count = cart.getItemCount(merchant.id);
-  const showAnimation = useRef(new Animated.Value(300)).current;
-  const toggleAnimation = (toValue) => {
-    Animated.timing(showAnimation, {
-      toValue,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  // useEffect(() => toggleAnimation(count > 0 ? 0 : 300), [count]);
-
-  const cartTotal = useSelector((state) => state.cart.cartTotal);
   const [updatedPrice, setUpdatedPrice] = useState();
 
   const getCartItemTotal = () => {
@@ -42,13 +25,7 @@ const MerchCartButton = ({ merchant, totalPrice }) => {
   }, [cartData]);
 
   return (
-    <View
-      style={{
-        position: "absolute",
-        width: "100%",
-        bottom: 0,
-      }}
-    >
+    <View style={styles.mainContainer}>
       <TouchableOpacity
         activeOpacity={0.8}
         style={styles.cartButton}
@@ -80,6 +57,11 @@ const MerchCartButton = ({ merchant, totalPrice }) => {
 };
 
 const styles = {
+  mainContainer: {
+    position: "absolute",
+    width: "100%",
+    bottom: 0,
+  },
   cartButtonWrapper: {
     position: "absolute",
     bottom: 0,

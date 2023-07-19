@@ -4,7 +4,6 @@ import {
   Text,
   Image,
   RefreshControl,
-  Dimensions,
   StatusBar,
   ActivityIndicator,
 } from "react-native";
@@ -16,21 +15,17 @@ import palette from "../../../styles/palette.styles";
 
 const Announcements = () => {
   const navigation = useNavigation();
-
   const [list, setList] = useState([]);
-  const [isFetching, setIsFetching] = useState(false);
   const [loading, setLoading] = useState(false);
   const [offset, setOffset] = useState(1);
   const [isAvailable, setIsAvailable] = useState(0);
 
   useEffect(() => {
-    LoadingOverlay.show("Loading...");
-    const unsubscribeTab = navigation.addListener("tabPress", (e) => {
-      LoadingOverlay.show("Fetching...");
+    const unsubscribeTab = navigation.addListener("focus", (e) => {
+      LoadingOverlay.show("Loading...");
       getDetails();
     });
-    getDetails();
-    return unsubscribeTab;
+    return () => unsubscribeTab;
   }, []);
 
   const getDetails = async () => {
@@ -39,48 +34,31 @@ const Announcements = () => {
       const { data } = await getAnnouncement({
         page: offset,
       });
-      if (data.success) {
-        setList(list.concat(data?.data?.announcement));
-        setIsAvailable(data.data.hasMore);
-        setOffset(offset + 1);
-        setIsFetching(false);
-        LoadingOverlay.hide();
-        setLoading(false);
-      } else {
-        LoadingOverlay.hide();
-        MessagePopup.show({
-          title: "Something wents to wrong!",
-          message: data.message,
-          actions: [
-            {
-              text: "OKAY",
-              action: () => {
-                MessagePopup.hide();
-              },
-            },
-          ],
-        });
-      }
+      setList(list.concat(data?.data?.announcement));
+      setIsAvailable(data.data.hasMore);
+      setOffset(offset + 1);
+      LoadingOverlay.hide();
+      setLoading(false);
     } catch (err) {
       LoadingOverlay.hide();
+      setLoading(false);
+      MessagePopup.show({
+        title: "Something wents to wrong!",
+        message: err.message,
+        actions: [
+          {
+            text: "Okay",
+            action: () => {
+              MessagePopup.hide();
+            },
+          },
+        ],
+      });
     }
   };
 
-  const refreshPage = () => {
-    setIsFetching(true);
-    getDetails();
-  };
-
   const ItemDivider = () => {
-    return (
-      <View
-        style={{
-          height: 2,
-          width: "100%",
-          backgroundColor: "#DBDBDB",
-        }}
-      />
-    );
+    return <View style={styles.itemDivider} />;
   };
 
   const renderFooter = () => {
@@ -120,22 +98,12 @@ const Announcements = () => {
         keyExtractor={(item) => `${item.title}_${item.id}`}
         ItemSeparatorComponent={ItemDivider}
         ListEmptyComponent={() => (
-          <View
-            style={{
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
-              width: "100%",
-            }}
-          >
+          <View style={styles.emptyListItem}>
             <Text>There is no data to display</Text>
           </View>
         )}
         refreshControl={
-          <RefreshControl
-            refreshing={isFetching}
-            onRefresh={() => refreshPage()}
-          />
+          <RefreshControl refreshing={loading} onRefresh={() => getDetails()} />
         }
         renderItem={({ item }) => {
           return (
@@ -188,6 +156,17 @@ const styles = {
   messageIcon: {
     height: 35,
     width: 35,
+  },
+  emptyListItem: {
+    alignItems: "center",
+    justifyContent: "center",
+    height: "100%",
+    width: "100%",
+  },
+  itemDivider: {
+    height: 2,
+    width: "100%",
+    backgroundColor: "#DBDBDB",
   },
 };
 

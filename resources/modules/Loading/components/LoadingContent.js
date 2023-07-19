@@ -1,13 +1,7 @@
 import React from "react";
-import { Image, View, Text } from "react-native";
-
-import {
-  NavigationContainerRefContext,
-  useNavigation,
-} from "@react-navigation/native";
+import { View, Text } from "react-native";
 
 const LoadingContent = ({ flowName }) => {
-  //   const navigation = useNavigation();
   return (
     <View style={{ marginBottom: 25, alignItems: "center", flex: 1 }}>
       <Text style={{ fontSize: 20, color: "#000000", marginBottom: 10 }}>

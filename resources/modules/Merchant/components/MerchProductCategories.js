@@ -1,17 +1,9 @@
 import React, { useEffect, useState } from "react";
-import {
-  TouchableOpacity,
-  ScrollView,
-  Text,
-  StyleSheet,
-  View,
-} from "react-native";
-
+import { TouchableOpacity, ScrollView, Text, View } from "react-native";
 import { getCategories } from "../../../http/index";
-
-import merchant from "@styles/merchant.styles";
 import textStyles from "@styles/textStyles.styles";
 import { MessagePopup } from "../../../components/common";
+import { StyleSheet } from "react-native";
 
 const MerchProductCategories = ({
   merchantId,
@@ -22,59 +14,41 @@ const MerchProductCategories = ({
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    onload();
+    getCategoryData();
   }, []);
 
-  const onload = async () => {
-    const params = {
-      restaurant_id: merchantId,
-    };
+  const getCategoryData = async () => {
     try {
+      const params = {
+        restaurant_id: merchantId,
+      };
       const { data } = await getCategories(params);
-      if (data.success) {
-        setCategories(data?.data?.category);
-        setAllCategories(data?.data?.category);
-      } else {
-        MessagePopup.show({
-          title: "Warning!",
-          message: data.message,
-          actions: [
-            {
-              text: "Okay",
-              action: () => {
-                MessagePopup.hide();
-              },
-            },
-          ],
-        });
-      }
+      setCategories(data?.data?.category);
+      setAllCategories(data?.data?.category);
     } catch (err) {
-      throw err;
+      MessagePopup.show({
+        title: "Error!",
+        message: err.message,
+        actions: [
+          {
+            text: "Okay",
+            action: () => {
+              MessagePopup.hide();
+            },
+          },
+        ],
+      });
     }
   };
 
   return categories.length > 0 ? (
     <ScrollView
-      style={{
-        padding: 15,
-        marginVertical: 5,
-        borderTopWidth: 5,
-        borderBottomWidth: 5,
-        borderColor: "#F0F0F0",
-      }}
+      style={styles.scrollContainer}
       horizontal={true}
       showsHorizontalScrollIndicator={false}
       contentInsetAdjustmentBehavior="automatic"
     >
-      <View
-        style={{
-          justifyContent: "center",
-          alignItems: "center",
-          alignSelf: "center",
-          flexDirection: "row",
-          marginEnd: 30,
-        }}
-      >
+      <View style={styles.categoryContainer}>
         {categories?.map((category, index) => {
           let isActive =
             selectedCategory && selectedCategory.id === category.id;
@@ -105,5 +79,22 @@ const MerchProductCategories = ({
     <></>
   );
 };
+
+const styles = StyleSheet.create({
+  scrollContainer: {
+    padding: 15,
+    marginVertical: 5,
+    borderTopWidth: 5,
+    borderBottomWidth: 5,
+    borderColor: "#F0F0F0",
+  },
+  categoryContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+    flexDirection: "row",
+    marginEnd: 30,
+  },
+});
 
 export { MerchProductCategories };

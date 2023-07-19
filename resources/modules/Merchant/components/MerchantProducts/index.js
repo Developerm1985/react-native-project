@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { View, Text } from "react-native";
-
 import { MerchProductCard } from "./components";
-
 import merchant from "@styles/merchant.styles";
 import textStyles from "@styles/textStyles.styles";
 
@@ -35,7 +33,6 @@ const MerchProducts = ({
           <MerchProductCard key={`merchproduct${index}`} product={product} />
         ))
       ) : (
-        // products?.map(( product, index ) => <MerchProductCard key={`merchproduct${ index }`} product={ product }/> )
         <Text
           style={[
             textStyles.align.center,
